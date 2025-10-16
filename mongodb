@@ -1,0 +1,604 @@
+# Complete Course Index Solutions - Emerging Technology (MongoDB & Web Development)
+
+I can see this is a comprehensive course outline for **USIT4P23 - Emerging Technology** taught by **Professor Sahil Singh** for **TYBSC IT, Semester V (2025-2026)**. This appears to be an indexing document for practical exercises covering MongoDB, Java, PHP, Python, jQuery, and JSON.
+
+Let me provide detailed explanations for each topic:
+
+-----
+
+## **1. MongoDB Basics**
+
+### **1b: Write a MongoDB query to create, display, and drop collection**
+
+```javascript
+// Create a collection (implicit)
+db.students.insertOne({ name: "John", roll: 1 })
+
+// Display collection contents
+db.students.find()
+
+// Display all collections
+show collections
+
+// Drop a collection
+db.students.drop()
+```
+
+**Explanation:** Collections are created automatically when you insert data. `find()` retrieves documents, and `drop()` removes the entire collection.
+
+-----
+
+### **1c: Write a MongoDB query to insert, query, update, and delete a document**
+
+```javascript
+// Insert a document
+db.users.insertOne({ 
+  name: "Alice", 
+  email: "alice@example.com", 
+  age: 25 
+})
+
+// Query/Read documents
+db.users.find({ name: "Alice" })
+
+// Update a document
+db.users.updateOne(
+  { name: "Alice" },
+  { $set: { age: 26 } }
+)
+
+// Delete a document
+db.users.deleteOne({ name: "Alice" })
+```
+
+**Explanation:** These are CRUD (Create, Read, Update, Delete) operations. `updateOne()` modifies specific fields using the `$set` operator.
+
+-----
+
+## **2. Simple Queries with MongoDB**
+
+```javascript
+// Find all documents
+db.collection.find()
+
+// Find with conditions
+db.products.find({ category: "electronics" })
+
+// Find with multiple conditions (AND)
+db.products.find({ category: "electronics", price: { $gt: 500 } })
+
+// Find with OR conditions
+db.products.find({ 
+  $or: [
+    { category: "electronics" },
+    { price: { $lt: 100 } }
+  ]
+})
+
+// Limiting results
+db.products.find().limit(5)
+
+// Sorting results
+db.products.find().sort({ price: 1 })  // 1 = ascending, -1 = descending
+
+// Projection (select specific fields)
+db.products.find({}, { name: 1, price: 1, _id: 0 })
+```
+
+-----
+
+## **3. Implementing Aggregations**
+
+### **3a: MongoDB query using sum, min, and max expression**
+
+```javascript
+db.sales.aggregate([
+  {
+    $group: {
+      _id: "$product",
+      totalSales: { $sum: "$amount" },
+      avgPrice: { $avg: "$price" },
+      maxPrice: { $max: "$price" },
+      minPrice: { $min: "$price" }
+    }
+  }
+])
+```
+
+**Explanation:** The `$group` stage groups documents and performs calculations. `$sum` adds values, `$max` finds maximum, `$min` finds minimum.
+
+-----
+
+### **3b: MongoDB query using push and addToSetexpression**
+
+```javascript
+// Using $push (adds element even if duplicate)
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customerId",
+      items: { $push: "$productName" }
+    }
+  }
+])
+
+// Using $addToSet (adds only unique elements)
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customerId",
+      uniqueItems: { $addToSet: "$productName" }
+    }
+  }
+])
+```
+
+**Explanation:** Both operators collect values into arrays. `$push` allows duplicates, `$addToSet` ensures uniqueness.
+
+-----
+
+### **3c: Write a MongoDB query first and last expression**
+
+```javascript
+db.events.aggregate([
+  { $sort: { timestamp: 1 } },
+  {
+    $group: {
+      _id: "$userId",
+      firstEvent: { $first: "$eventType" },
+      lastEvent: { $last: "$eventType" },
+      firstTime: { $first: "$timestamp" },
+      lastTime: { $last: "$timestamp" }
+    }
+  }
+])
+```
+
+**Explanation:** After sorting, `$first` gets the first document’s value and `$last` gets the last document’s value in each group.
+
+-----
+
+## **4. Replication, Backup, and Restore**
+
+### **4a: Create a replica of an existing database**
+
+```javascript
+// Method 1: Using mongodump and mongorestore
+// Terminal commands:
+mongodump --db originalDB --out ./backup
+
+mongorestore --db replicaDB ./backup/originalDB
+
+// Method 2: Using MongoDB Compass or CLI
+use originalDB
+db.copyDatabase("originalDB", "replicaDB")
+```
+
+-----
+
+### **4b: Write a MongoDB query to backup an existing database**
+
+```javascript
+// Using mongodump (command line)
+mongodump --db myDatabase --out ./backups
+
+// Backup specific collection
+mongodump --db myDatabase --collection users --out ./backups
+
+// Backup with compression
+mongodump --db myDatabase --archive=backup.archive --gzip
+```
+
+-----
+
+### **4c: Write a MongoDB query to restore database**
+
+```javascript
+// Restore entire database
+mongorestore --db myDatabase ./backups/myDatabase
+
+// Restore specific collection
+mongorestore --db myDatabase --collection users ./backups/myDatabase/users.bson
+
+// Restore from compressed archive
+mongorestore --archive=backup.archive --gzip
+```
+
+-----
+
+## **5. Java and MongoDB**
+
+### **5a: Connecting Java with MongoDB and CRUD Operations**
+
+```java
+import com.mongodb.client.*;
+import org.bson.Document;
+
+public class MongoDBJavaExample {
+    public static void main(String[] args) {
+        // Connection
+        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+        MongoDatabase database = mongoClient.getDatabase("myDB");
+        MongoCollection<Document> collection = database.getCollection("users");
+        
+        // Insert
+        Document doc = new Document("name", "John")
+            .append("email", "john@example.com")
+            .append("age", 25);
+        collection.insertOne(doc);
+        
+        // Query
+        for (Document document : collection.find(new Document("name", "John"))) {
+            System.out.println(document.toJson());
+        }
+        
+        // Update
+        collection.updateOne(
+            new Document("name", "John"),
+            new Document("$set", new Document("age", 26))
+        );
+        
+        // Delete
+        collection.deleteOne(new Document("name", "John"));
+        
+        mongoClient.close();
+    }
+}
+```
+
+-----
+
+## **6. PHP and MongoDB**
+
+### **6a: Connecting PHP with MongoDB and CRUD Operations**
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use MongoDB\Client;
+
+// Connection
+$client = new Client("mongodb://localhost:27017");
+$db = $client->myDB;
+$collection = $db->users;
+
+// Insert
+$result = $collection->insertOne([
+    'name' => 'Alice',
+    'email' => 'alice@example.com',
+    'age' => 28
+]);
+
+// Query
+$documents = $collection->find(['name' => 'Alice']);
+foreach ($documents as $doc) {
+    echo $doc['name'] . "\n";
+}
+
+// Update
+$collection->updateOne(
+    ['name' => 'Alice'],
+    ['$set' => ['age' => 29]]
+);
+
+// Delete
+$collection->deleteOne(['name' => 'Alice']);
+?>
+```
+
+-----
+
+## **7. Python and MongoDB**
+
+### **7a: Connecting Python with MongoDB and CRUD Operations**
+
+```python
+from pymongo import MongoClient
+
+# Connection
+client = MongoClient('mongodb://localhost:27017/')
+db = client['myDB']
+collection = db['users']
+
+# Insert
+result = collection.insert_one({
+    'name': 'Bob',
+    'email': 'bob@example.com',
+    'age': 30
+})
+
+# Query
+for doc in collection.find({'name': 'Bob'}):
+    print(doc)
+
+# Update
+collection.update_one(
+    {'name': 'Bob'},
+    {'$set': {'age': 31}}
+)
+
+# Delete
+collection.delete_one({'name': 'Bob'})
+```
+
+-----
+
+## **8. Programming on Basic jQuery**
+
+### **8a: jQuery Basic Events**
+
+```javascript
+$(document).ready(function() {
+    // Click event
+    $('#myButton').click(function() {
+        alert('Button clicked!');
+    });
+    
+    // Double-click event
+    $('#myElement').dblclick(function() {
+        $(this).hide();
+    });
+    
+    // Mouse events
+    $('#myElement').mouseenter(function() {
+        $(this).css('background-color', 'yellow');
+    });
+    
+    $('#myElement').mouseleave(function() {
+        $(this).css('background-color', 'white');
+    });
+    
+    // Focus and blur
+    $('input').focus(function() {
+        $(this).css('border', '2px solid blue');
+    });
+});
+```
+
+-----
+
+### **8b: jQuery Selectors, Hide, and Show Effects**
+
+```javascript
+$(document).ready(function() {
+    // Selectors
+    $('#id-selector');           // ID selector
+    $('.class-selector');        // Class selector
+    $('p');                      // Element selector
+    $('[attribute="value"]');    // Attribute selector
+    
+    // Hide and Show
+    $('#hideBtn').click(function() {
+        $('#myDiv').hide();      // or hide(1000) for animation
+    });
+    
+    $('#showBtn').click(function() {
+        $('#myDiv').show();      // or show(1000) for animation
+    });
+    
+    $('#toggleBtn').click(function() {
+        $('#myDiv').toggle();    // Toggles between hide and show
+    });
+});
+```
+
+-----
+
+### **8c: jQuery Fading and Sliding Effects**
+
+```javascript
+$(document).ready(function() {
+    // Fading effects
+    $('#fadeInBtn').click(function() {
+        $('#myDiv').fadeIn();        // or fadeIn(1000)
+    });
+    
+    $('#fadeOutBtn').click(function() {
+        $('#myDiv').fadeOut(1000);   // Fade out in 1 second
+    });
+    
+    $('#fadeToggleBtn').click(function() {
+        $('#myDiv').fadeToggle();
+    });
+    
+    $('#fadeTo').click(function() {
+        $('#myDiv').fadeTo("slow", 0.5);  // Fade to 50% opacity
+    });
+    
+    // Sliding effects
+    $('#slideDownBtn').click(function() {
+        $('#myDiv').slideDown();
+    });
+    
+    $('#slideUpBtn').click(function() {
+        $('#myDiv').slideUp();
+    });
+    
+    $('#slideToggleBtn').click(function() {
+        $('#myDiv').slideToggle();
+    });
+});
+```
+
+-----
+
+## **9. jQuery Advanced**
+
+### **9a: jQuery Animation Effects and Chaining**
+
+```javascript
+$(document).ready(function() {
+    // Animation
+    $('#animateBtn').click(function() {
+        $('#myDiv').animate({
+            left: '250px',
+            height: '150px',
+            width: '150px',
+            opacity: 0.5
+        }, 1000);
+    });
+    
+    // Chaining (multiple effects in sequence)
+    $('#chainBtn').click(function() {
+        $('#myDiv')
+            .fadeIn()
+            .slideUp()
+            .slideDown()
+            .fadeOut();
+    });
+    
+    // Chaining with delays
+    $('#myDiv')
+        .delay(500)
+        .fadeIn(1000)
+        .delay(1000)
+        .fadeOut(1000);
+});
+```
+
+-----
+
+### **9b: jQuery Callback, Get, and Set Contents**
+
+```javascript
+$(document).ready(function() {
+    // Callback (function executed after effect completes)
+    $('#btnHide').click(function() {
+        $('#myDiv').hide(1000, function() {
+            alert('Hide effect finished!');
+        });
+    });
+    
+    // Get contents
+    $('#getBtn').click(function() {
+        let text = $('#myDiv').text();           // Get text content
+        let html = $('#myDiv').html();           // Get HTML content
+        let value = $('#myInput').val();         // Get input value
+        console.log(text, html, value);
+    });
+    
+    // Set contents
+    $('#setBtn').click(function() {
+        $('#myDiv').text('New text');            // Set text
+        $('#myDiv').html('<p>New HTML</p>');     // Set HTML
+        $('#myInput').val('New value');          // Set input value
+    });
+});
+```
+
+-----
+
+### **9c: jQuery Insert Contents, Remove Elements, and Attributes**
+
+```javascript
+$(document).ready(function() {
+    // Insert contents
+    $('#myDiv').append('Appended text');           // Add at end
+    $('#myDiv').prepend('Prepended text');         // Add at beginning
+    $('#myDiv').after('After element');            // Add after element
+    $('#myDiv').before('Before element');          // Add before element
+    
+    // Remove elements
+    $('#myDiv').remove();                          // Remove element and content
+    $('#myDiv').empty();                           // Remove content only
+    
+    // Attribute operations
+    $('#myImg').attr('src', 'new-image.jpg');      // Set attribute
+    let src = $('#myImg').attr('src');             // Get attribute
+    
+    $('#myElement').removeAttr('disabled');        // Remove attribute
+    $('#myElement').addClass('active');            // Add class
+    $('#myElement').removeClass('active');         // Remove class
+    $('#myElement').toggleClass('active');         // Toggle class
+});
+```
+
+-----
+
+## **10. JSON & MongoDB**
+
+### **10a: Creating JSON**
+
+```javascript
+// JSON Object
+let person = {
+    name: "John",
+    age: 30,
+    email: "john@example.com",
+    hobbies: ["Reading", "Gaming"],
+    address: {
+        city: "New York",
+        zip: "10001"
+    }
+};
+
+// JSON Array
+let people = [
+    { name: "John", age: 30 },
+    { name: "Jane", age: 25 }
+];
+```
+
+-----
+
+### **10b: Parsing JSON**
+
+```javascript
+// String to Object (Parsing)
+let jsonString = '{"name":"John","age":30}';
+let obj = JSON.parse(jsonString);
+console.log(obj.name);  // Output: John
+
+// Parse JSON array
+let jsonArray = '[{"name":"John"},{"name":"Jane"}]';
+let arr = JSON.parse(jsonArray);
+console.log(arr[0].name);  // Output: John
+```
+
+-----
+
+### **10c: Persisting JSON**
+
+```javascript
+// Save to localStorage
+let data = { name: "John", age: 30 };
+localStorage.setItem('user', JSON.stringify(data));
+
+// Retrieve from localStorage
+let retrieved = JSON.parse(localStorage.getItem('user'));
+console.log(retrieved.name);  // Output: John
+```
+
+-----
+
+### **10d: Export MongoDB Query Results to JSON**
+
+```javascript
+// MongoDB shell command
+mongoexport --db myDB --collection users --out users.json
+
+// Export with query
+mongoexport --db myDB --collection users --query '{"age": {$gt: 25}}' --out filtered_users.json
+
+// Export as JSON array
+mongoexport --db myDB --collection users --jsonArray --out users.json
+```
+
+-----
+
+## **Summary Table**
+
+|Topic                 |Key Concepts                                             |
+|----------------------|---------------------------------------------------------|
+|**MongoDB Basics**    |Create, Display, Drop Collections; CRUD Operations       |
+|**Queries**           |Find, Filter, Sort, Limit, Projection                    |
+|**Aggregations**      |$group, $sum, $max, $min, $push, $addToSet, $first, $last|
+|**Backup/Restore**    |mongodump, mongorestore                                  |
+|**Java Integration**  |MongoClient, Document operations                         |
+|**PHP Integration**   |MongoDB\Client, CRUD operations                          |
+|**Python Integration**|PyMongo, connection and operations                       |
+|**jQuery**            |Events, Selectors, Effects, Animations                   |
+|**JSON**              |Create, Parse, Persist, Export                           |
+
+This covers all practical exercises for the course. Each solution includes working code examples with detailed explanations!​​​​​​​​​​​​​​​​
